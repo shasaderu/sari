@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+# Local Firebase config — NEVER commit real keys.
+src/firebase-config.local.js
+# Vite / editor
+*.local
+.vscode/
+tsconfig.tsbuildinfo

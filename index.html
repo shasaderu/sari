@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sari — peringkas catatan hybrid: Gemini Nano on-device + Gemini cloud lewat Firebase AI Logic."
+    />
+    <title>Sari — Peringkas Catatan Hybrid</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">🌸</span>
+        <div>
+          <h1>Sari</h1>
+          <p class="tagline" data-i18n="tagline">
+            Peringkas catatan hybrid — cepat di perangkat, mendalam di cloud.
+          </p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="lang-toggle" role="group" aria-label="Bahasa / Language">
+          <button id="lang-id" class="lang-btn active" type="button">ID</button>
+          <button id="lang-en" class="lang-btn" type="button">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="status-strip" aria-label="Status mesin">
+      <div class="chip" id="chip-nano" title="Gemini Nano (Chrome Prompt API)">
+        <span class="dot dot-unknown"></span><span data-i18n="chipNano">Nano: memeriksa…</span>
+      </div>
+      <div class="chip" id="chip-firebase" title="Firebase AI Logic">
+        <span class="dot dot-unknown"></span><span data-i18n="chipFirebase">Firebase: memeriksa…</span>
+      </div>
+      <div class="chip" id="chip-appcheck" title="Firebase App Check">
+        <span class="dot dot-unknown"></span><span data-i18n="chipAppCheck">App Check: memeriksa…</span>
+      </div>
+      <div class="chip" id="chip-net" title="Koneksi internet">
+        <span class="dot dot-ok"></span><span data-i18n="chipNet">Online</span>
+      </div>
+    </section>
+
+    <div id="setup-banner" class="banner hidden" role="alert"></div>
+
+    <main class="layout">
+      <section class="panel input-panel">
+        <label for="source-text" class="panel-title" data-i18n="inputTitle">Tempel teksmu</label>
+        <p class="hint" data-i18n="inputHint">
+          Artikel, catatan kuliah, atau chat — Sari merangkumnya. Teks tidak
+          pernah meninggalkan perangkatmu saat diproses on-device.
+        </p>
+        <textarea
+          id="source-text"
+          rows="12"
+          data-i18n-ph="inputPlaceholder"
+          placeholder="Tempel artikel, catatan kuliah, atau chat di sini…"
+        ></textarea>
+        <div class="input-meta">
+          <span id="char-count">0 karakter</span>
+          <span id="route-note" class="route-note"></span>
+        </div>
+        <div class="sample-row">
+          <span data-i18n="trySample">Coba contoh:</span>
+          <button id="sample-id" class="link-btn" type="button">📰 Artikel (ID)</button>
+          <button id="sample-en" class="link-btn" type="button">📝 Lecture notes (EN)</button>
+          <button id="clear-text" class="link-btn" type="button" data-i18n="clearBtn">Bersihkan</button>
+        </div>
+
+        <div class="actions">
+          <button id="btn-quick" class="btn btn-primary" type="button">
+            ⚡ <span data-i18n="btnQuick">Ringkasan Cepat</span>
+            <small data-i18n="btnQuickSub">On-device dulu</small>
+          </button>
+          <button id="btn-deep" class="btn btn-cloud" type="button">
+            🔍 <span data-i18n="btnDeep">Analisis Mendalam</span>
+            <small data-i18n="btnDeepSub">Cloud · poin kunci + kuis</small>
+          </button>
+        </div>
+        <p id="progress" class="progress" aria-live="polite"></p>
+        <p id="error" class="error hidden" role="alert"></p>
+      </section>
+
+      <section class="panel result-panel" aria-live="polite">
+        <div id="empty-state" class="empty-state">
+          <div class="empty-art" aria-hidden="true">🌸📄✨</div>
+          <p data-i18n="emptyTitle">Belum ada ringkasan.</p>
+          <p class="hint" data-i18n="emptyHint">
+            Tempel teks lalu tekan “Ringkasan Cepat” — Nano di perangkatmu
+            menjawab dalam hitungan detik, tanpa internet.
+          </p>
+        </div>
+
+        <article id="result" class="hidden">
+          <div class="result-head">
+            <h2 id="result-title"></h2>
+            <span id="engine-badge" class="badge badge-unknown">…</span>
+          </div>
+          <p id="engine-note" class="engine-note"></p>
+          <p id="result-summary" class="summary"></p>
+
+          <div class="result-actions">
+            <button id="btn-tts" class="btn btn-tts" type="button">
+              🔊 <span data-i18n="btnTts">Bacakan Ringkasan</span>
+              <small data-i18n="btnTtsSub">Gemini TTS · cloud</small>
+            </button>
+            <button id="btn-copy" class="btn btn-ghost" type="button" data-i18n="btnCopy">📋 Salin</button>
+            <button id="btn-save" class="btn btn-ghost" type="button" data-i18n="btnSave">💾 Simpan ke Riwayat</button>
+          </div>
+          <p id="tts-status" class="progress" aria-live="polite"></p>
+          <audio id="tts-player" controls class="hidden"></audio>
+
+          <div id="deep-section" class="hidden">
+            <h3 data-i18n="keyPoints">Poin Kunci</h3>
+            <ul id="key-points" class="points"></ul>
+            <h3 data-i18n="actionItems">Action Items</h3>
+            <ul id="action-items" class="points"></ul>
+            <h3 data-i18n="flashcards">Flashcard</h3>
+            <div id="flashcards" class="cards"></div>
+            <h3 data-i18n="quiz">Kuis Cepat</h3>
+            <div id="quiz" class="quiz"></div>
+          </div>
+        </article>
+      </section>
+
+      <aside class="panel history-panel">
+        <h2 class="panel-title" data-i18n="historyTitle">Riwayat</h2>
+        <p class="hint" data-i18n="historyHint">Tersimpan lokal di browser ini (localStorage).</p>
+        <ul id="history-list" class="history-list"></ul>
+        <button id="btn-clear-history" class="btn btn-ghost btn-small" type="button" data-i18n="clearHistory">
+          Hapus semua riwayat
+        </button>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <p data-i18n="footer">
+        Semua inferensi AI hanya lewat Firebase AI Logic (Firebase JS SDK).
+        Tidak ada panggilan langsung ke Gemini API atau API lain.
+      </p>
+      <p class="fineprint">
+        Sari · #BuildHybridAI 2026 · Web track ·
+        <span data-i18n="fineprint">On-device: Gemini Nano (Chrome Prompt API) · Cloud: Gemini 3.8 Flash · Suara: Gemini 3.8 Flash TTS</span>
+      </p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
